@@ -1,4 +1,4 @@
-<?php namespace Cartalyst\Sentinel\Native\Facades;
+<?php namespace Cartalyst\Sentinel\Support\Facades;
 /**
  * Part of the Sentinel package.
  *
@@ -7,17 +7,17 @@
  * Licensed under the Cartalyst PSL License.
  *
  * This source file is subject to the Cartalyst PSL License that is
- * bundled with this package in the license.txt file.
+ * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    1.1.0
+ * @version    2.0.0
  * @author     Cartalyst LLC
  * @license    Cartalyst PSL
  * @copyright  (c) 2011-2015, Cartalyst LLC
  * @link       http://cartalyst.com
  */
 
-use Cartalyst\Sentinel\Native\SentinelBootstrapper;
+use Cartalyst\Sentinel\Support\SentinelBootstrapper;
 
 class Sentinel {
 
@@ -31,21 +31,21 @@ class Sentinel {
 	/**
 	 * The Native Bootstraper instance.
 	 *
-	 * @var \Cartalyst\Sentinel\Native\SentinelBootstrapper
+	 * @var \Cartalyst\Sentinel\Support\SentinelBootstrapper
 	 */
 	protected static $instance;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param  \Cartalyst\Sentinel\Native\SentinelBootstrapper  $bootstrapper
+	 * @param  \Cartalyst\Sentinel\Support\SentinelBootstrapper  $bootstrapper
 	 * @return void
 	 */
 	public function __construct(SentinelBootstrapper $bootstrapper = null)
 	{
 		if ($bootstrapper === null)
 		{
-			$bootstrapper = new SentinelBootstrapper;
+			$bootstrapper = new SentinelBootstrapper();
 		}
 
 		$this->sentinel = $bootstrapper->createSentinel();
@@ -64,7 +64,7 @@ class Sentinel {
 	/**
 	 * Creates a new Native Bootstraper instance.
 	 *
-	 * @param  \Cartalyst\Sentinel\Native\SentinelBootstrapper  $bootstrapper
+	 * @param  \Cartalyst\Sentinel\Support\SentinelBootstrapper  $bootstrapper
 	 * @return void
 	 */
 	public static function instance(SentinelBootstrapper $bootstrapper = null)

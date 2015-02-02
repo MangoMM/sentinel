@@ -1,4 +1,4 @@
-<?php namespace Cartalyst\Sentinel\Native;
+<?php namespace Cartalyst\Sentinel\Support;
 /**
  * Part of the Sentinel package.
  *
@@ -7,30 +7,30 @@
  * Licensed under the Cartalyst PSL License.
  *
  * This source file is subject to the Cartalyst PSL License that is
- * bundled with this package in the license.txt file.
+ * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    1.1.0
+ * @version    2.0.0
  * @author     Cartalyst LLC
  * @license    Cartalyst PSL
  * @copyright  (c) 2011-2015, Cartalyst LLC
  * @link       http://cartalyst.com
  */
 
-use Cartalyst\Sentinel\Activations\IlluminateActivationRepository;
-use Cartalyst\Sentinel\Checkpoints\ActivationCheckpoint;
-use Cartalyst\Sentinel\Checkpoints\ThrottleCheckpoint;
+use InvalidArgumentException;
+use Cartalyst\Sentinel\Sentinel;
 use Cartalyst\Sentinel\Cookies\NativeCookie;
 use Cartalyst\Sentinel\Hashing\NativeHasher;
-use Cartalyst\Sentinel\Persistences\IlluminatePersistenceRepository;
-use Cartalyst\Sentinel\Reminders\IlluminateReminderRepository;
-use Cartalyst\Sentinel\Roles\IlluminateRoleRepository;
-use Cartalyst\Sentinel\Sentinel;
+use Cartalyst\Sentinel\Roles\RoleRepository;
+use Cartalyst\Sentinel\Users\UserRepository;
 use Cartalyst\Sentinel\Sessions\NativeSession;
-use Cartalyst\Sentinel\Throttling\IlluminateThrottleRepository;
-use Cartalyst\Sentinel\Users\IlluminateUserRepository;
-use Illuminate\Events\Dispatcher;
-use InvalidArgumentException;
+use Cartalyst\Sentinel\Reminders\ReminderRepository;
+use Cartalyst\Sentinel\Throttling\ThrottleRepository;
+use Cartalyst\Sentinel\Checkpoints\ThrottleCheckpoint;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Cartalyst\Sentinel\Checkpoints\ActivationCheckpoint;
+use Cartalyst\Sentinel\Activations\ActivationRepository;
+use Cartalyst\Sentinel\Persistences\PersistenceRepository;
 
 class SentinelBootstrapper {
 
@@ -44,7 +44,7 @@ class SentinelBootstrapper {
 	/**
 	 * The event dispatcher.
 	 *
-	 * @var \Illuminate\Events\Dispatcher
+	 * @var \Symfony\Component\EventDispatcher\EventDispatcher
 	 */
 	protected $dispatcher;
 
@@ -62,7 +62,7 @@ class SentinelBootstrapper {
 		}
 		else
 		{
-			$this->config = $config ?: new ConfigRepository;
+			$this->config = $config ?: new ConfigRepository();
 		}
 	}
 
@@ -108,7 +108,7 @@ class SentinelBootstrapper {
 	/**
 	 * Creates a persistences repository.
 	 *
-	 * @return \Cartalyst\Sentinel\Persistences\IlluminatePersistenceRepository
+	 * @return \Cartalyst\Sentinel\Persistences\PersistenceRepository
 	 */
 	protected function createPersistence()
 	{
@@ -116,7 +116,7 @@ class SentinelBootstrapper {
 
 		$cookie = $this->createCookie();
 
-		return new IlluminatePersistenceRepository($session, $cookie);
+		return new PersistenceRepository($session, $cookie);
 	}
 
 	/**
@@ -142,7 +142,7 @@ class SentinelBootstrapper {
 	/**
 	 * Creates a user repository.
 	 *
-	 * @return \Cartalyst\Sentinel\Users\IlluminateUserRepository
+	 * @return \Cartalyst\Sentinel\Users\UserRepository
 	 */
 	protected function createUsers()
 	{
@@ -164,7 +164,7 @@ class SentinelBootstrapper {
 			forward_static_call_array([$persistences, 'setUsersModel'], [$model]);
 		}
 
-		return new IlluminateUserRepository($hasher, $this->getEventDispatcher(), $model);
+		return new UserRepository($hasher, $this->getEventDispatcher(), $model);
 	}
 
 	/**
@@ -174,13 +174,13 @@ class SentinelBootstrapper {
 	 */
 	protected function createHasher()
 	{
-		return new NativeHasher;
+		return new NativeHasher();
 	}
 
 	/**
 	 * Creates a role repository.
 	 *
-	 * @return \Cartalyst\Sentinel\Roles\IlluminateRoleRepository
+	 * @return \Cartalyst\Sentinel\Roles\RoleRepository
 	 */
 	protected function createRoles()
 	{
@@ -193,13 +193,13 @@ class SentinelBootstrapper {
 			forward_static_call_array([$users, 'setRolesModel'], [$model]);
 		}
 
-		return new IlluminateRoleRepository($model);
+		return new RoleRepository($model);
 	}
 
 	/**
 	 * Creates an activation repository.
 	 *
-	 * @return \Cartalyst\Sentinel\Activations\IlluminateActivationRepository
+	 * @return \Cartalyst\Sentinel\Activations\ActivationRepository
 	 */
 	protected function createActivations()
 	{
@@ -207,7 +207,7 @@ class SentinelBootstrapper {
 
 		$expires = $this->config['activations']['expires'];
 
-		return new IlluminateActivationRepository($model, $expires);
+		return new ActivationRepository($model, $expires);
 	}
 
 	/**
@@ -237,10 +237,10 @@ class SentinelBootstrapper {
 	/**
 	 * Create an activation checkpoint.
 	 *
-	 * @param  \Cartalyst\Sentinel\Activations\IlluminateActivationRepository  $activations
+	 * @param  \Cartalyst\Sentinel\Activations\ActivationRepository  $activations
 	 * @return \Cartalyst\Sentinel\Checkpoints\ActivationCheckpoint
 	 */
-	protected function createActivationCheckpoint(IlluminateActivationRepository $activations)
+	protected function createActivationCheckpoint(ActivationRepository $activations)
 	{
 		return new ActivationCheckpoint($activations);
 	}
@@ -248,12 +248,12 @@ class SentinelBootstrapper {
 	/**
 	 * Create activation and throttling checkpoints.
 	 *
-	 * @param  \Cartalyst\Sentinel\Activations\IlluminateActivationRepository  $activations
+	 * @param  \Cartalyst\Sentinel\Activations\ActivationRepository  $activations
 	 * @param  string  $ipAddress
 	 * @return array
 	 * @throws \InvalidArgumentException
 	 */
-	protected function createCheckpoints(IlluminateActivationRepository $activations, $ipAddress)
+	protected function createCheckpoints(ActivationRepository $activations, $ipAddress)
 	{
 		$activeCheckpoints = $this->config['checkpoints'];
 
@@ -292,7 +292,7 @@ class SentinelBootstrapper {
 	/**
 	 * Create a throttling repository.
 	 *
-	 * @return \Cartalyst\Sentinel\Throttling\IlluminateThrottleRepository
+	 * @return \Cartalyst\Sentinel\Throttling\ThrottleRepository
 	 */
 	protected function createThrottling()
 	{
@@ -305,7 +305,7 @@ class SentinelBootstrapper {
 			${"{$type}Thresholds"} = $this->config['throttling'][$type]['thresholds'];
 		}
 
-		return new IlluminateThrottleRepository(
+		return new ThrottleRepository(
 			$model,
 			$globalInterval,
 			$globalThresholds,
@@ -319,13 +319,13 @@ class SentinelBootstrapper {
 	/**
 	 * Returns the event dispatcher.
 	 *
-	 * @return \Illuminate\Events\Dispatcher
+	 * @return \Symfony\Component\EventDispatcher\EventDispatcher
 	 */
 	protected function getEventDispatcher()
 	{
 		if ( ! $this->dispatcher)
 		{
-			$this->dispatcher = new Dispatcher;
+			$this->dispatcher = new EventDispatcher();
 		}
 
 		return $this->dispatcher;
@@ -334,16 +334,16 @@ class SentinelBootstrapper {
 	/**
 	 * Create a reminder repository.
 	 *
-	 * @param  \Cartalyst\Sentinel\Users\IlluminateUserRepository  $users
-	 * @return \Cartalyst\Sentinel\Reminders\IlluminateReminderRepository
+	 * @param  \Cartalyst\Sentinel\Users\UserRepository  $users
+	 * @return \Cartalyst\Sentinel\Reminders\ReminderRepository
 	 */
-	protected function createReminders(IlluminateUserRepository $users)
+	protected function createReminders(UserRepository $users)
 	{
 		$model = $this->config['reminders']['model'];
 
 		$expires = $this->config['reminders']['expires'];
 
-		return new IlluminateReminderRepository($users, $model, $expires);
+		return new ReminderRepository($users, $model, $expires);
 	}
 
 }

@@ -7,29 +7,29 @@
  * Licensed under the Cartalyst PSL License.
  *
  * This source file is subject to the Cartalyst PSL License that is
- * bundled with this package in the license.txt file.
+ * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    1.1.0
+ * @version    2.0.0
  * @author     Cartalyst LLC
  * @license    Cartalyst PSL
  * @copyright  (c) 2011-2015, Cartalyst LLC
  * @link       http://cartalyst.com
  */
 
-use BadMethodCallException;
-use Cartalyst\Sentinel\Activations\ActivationRepositoryInterface;
-use Cartalyst\Sentinel\Checkpoints\CheckpointInterface;
-use Cartalyst\Sentinel\Persistences\PersistenceRepositoryInterface;
-use Cartalyst\Sentinel\Reminders\ReminderRepositoryInterface;
-use Cartalyst\Sentinel\Roles\RoleRepositoryInterface;
-use Cartalyst\Sentinel\Users\UserInterface;
-use Cartalyst\Sentinel\Users\UserRepositoryInterface;
-use Cartalyst\Support\Traits\EventTrait;
 use Closure;
-use Illuminate\Events\Dispatcher;
-use InvalidArgumentException;
 use RuntimeException;
+use BadMethodCallException;
+use InvalidArgumentException;
+use Cartalyst\Support\Traits\EventTrait;
+use Cartalyst\Sentinel\Users\UserInterface;
+use Cartalyst\Sentinel\Roles\RoleRepositoryInterface;
+use Cartalyst\Sentinel\Users\UserRepositoryInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Cartalyst\Sentinel\Checkpoints\CheckpointInterface;
+use Cartalyst\Sentinel\Reminders\ReminderRepositoryInterface;
+use Cartalyst\Sentinel\Activations\ActivationRepositoryInterface;
+use Cartalyst\Sentinel\Persistences\PersistenceRepositoryInterface;
 
 class Sentinel {
 
@@ -119,7 +119,7 @@ class Sentinel {
 	 * @param  \Cartalyst\Sentinel\Users\UserRepositoryInterface  $users
 	 * @param  \Cartalyst\Sentinel\Roles\RoleRepositoryInterface  $roles
 	 * @param  \Cartalyst\Sentinel\Activations\ActivationRepositoryInterface  $activations
-	 * @param  \Illuminate\Events\Dispatcher  $dispatcher
+	 * @param  \Symfony\Component\EventDispatcher\EventDispatcher  $dispatcher
 	 * @return void
 	 */
 	public function __construct(
@@ -127,7 +127,7 @@ class Sentinel {
 		UserRepositoryInterface $users,
 		RoleRepositoryInterface $roles,
 		ActivationRepositoryInterface $activations,
-		Dispatcher $dispatcher
+		EventDispatcher $dispatcher
 	)
 	{
 		$this->persistences = $persistences;
@@ -232,7 +232,7 @@ class Sentinel {
 	 */
 	public function check()
 	{
-		if ($this->user !== null)
+		if ($this->user)
 		{
 			return $this->user;
 		}
@@ -533,7 +533,7 @@ class Sentinel {
 	 */
 	public function logout(UserInterface $user = null, $everywhere = false)
 	{
-		$user = $user ?: $this->getUser();
+		$user = $user ?: $this->check();
 
 		if ($user === null)
 		{
@@ -664,22 +664,6 @@ class Sentinel {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Returns the currently logged in user, lazily checking for it.
-	 *
-	 * @param  bool  $check
-	 * @return \Cartalyst\Sentinel\Users\UserInterface
-	 */
-	public function getUser($check = true)
-	{
-		if ($check === true && $this->user === null)
-		{
-			$this->check();
-		}
-
-		return $this->user;
 	}
 
 	/**
@@ -862,7 +846,7 @@ class Sentinel {
 
 		if (in_array($method, $methods))
 		{
-			$user = $this->getUser();
+			$user = $this->check();
 
 			if ($user === null)
 			{
