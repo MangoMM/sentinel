@@ -1,4 +1,5 @@
-<?php namespace Cartalyst\Sentinel\Permissions;
+<?php
+
 /**
  * Part of the Sentinel package.
  *
@@ -17,35 +18,33 @@
  * @link       http://cartalyst.com
  */
 
-class StandardPermissions implements PermissionsInterface {
+namespace Cartalyst\Sentinel\Permissions;
 
-	use PermissionsTrait;
+class StandardPermissions implements PermissionsInterface
+{
+    use PermissionsTrait;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	protected function createPreparedPermissions()
-	{
-		$prepared = [];
+    /**
+     * {@inheritDoc}
+     */
+    protected function createPreparedPermissions()
+    {
+        $prepared = [];
 
-		if ( ! empty($this->secondaryPermissions))
-		{
-			foreach ($this->secondaryPermissions as $permissions)
-			{
-				$this->preparePermissions($prepared, $permissions);
-			}
-		}
+        if (! empty($this->secondaryPermissions)) {
+            foreach ($this->secondaryPermissions as $permissions) {
+                $this->preparePermissions($prepared, $permissions);
+            }
+        }
 
-		if ( ! empty($this->permissions))
-		{
-			$permissions = [];
+        if (! empty($this->permissions)) {
+            $permissions = [];
 
-			$this->preparePermissions($permissions, $this->permissions);
+            $this->preparePermissions($permissions, $this->permissions);
 
-			$prepared = array_merge($prepared, $permissions);
-		}
+            $prepared = array_merge($prepared, $permissions);
+        }
 
-		return $prepared;
-	}
-
+        return $prepared;
+    }
 }
