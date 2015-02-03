@@ -535,7 +535,7 @@ class Sentinel {
 	{
 		$user = $user ?: $this->check();
 
-		if ($user === null)
+		if ($user === false)
 		{
 			return true;
 		}
@@ -848,7 +848,7 @@ class Sentinel {
 		{
 			$user = $this->check();
 
-			if ($user === null)
+			if ($user === false)
 			{
 				throw new BadMethodCallException("Method {$className}::{$method}() can only be called if a user is logged in.");
 			}
