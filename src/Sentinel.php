@@ -127,7 +127,7 @@ class Sentinel {
 		UserRepositoryInterface $users,
 		RoleRepositoryInterface $roles,
 		ActivationRepositoryInterface $activations,
-		EventDispatcher $dispatcher
+		EventDispatcher $dispatcher = null
 	)
 	{
 		$this->persistences = $persistences;
